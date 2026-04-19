@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Pixel Studio">
+<meta name="theme-color" content="#111111">
+<title>Pixel Studio — Mike App</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#111;color:#eee;padding:1rem 1rem 2rem;max-width:960px;margin:0 auto;min-height:100vh}
+h1{font-size:17px;font-weight:500;color:#fff;margin-bottom:1rem;letter-spacing:.01em}
+.tabs{display:flex;gap:6px;margin-bottom:1.25rem;flex-wrap:wrap}
+.tab{padding:7px 14px;font-size:12px;border:1px solid #2a2a2a;border-radius:20px;cursor:pointer;background:transparent;color:#777;transition:all .15s}
+.tab.active{background:#fff;color:#111;border-color:#fff;font-weight:500}
+.tab:hover:not(.active){color:#ddd;border-color:#444}
+.panel{display:none}.panel.active{display:block}
+.sec{font-size:10px;color:#444;text-transform:uppercase;letter-spacing:.07em;margin:1.1rem 0 .55rem}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px}
+.ctrl{display:flex;flex-direction:column;gap:4px}
+.ctrl label{font-size:11px;color:#666}
+.rw{display:flex;align-items:center;gap:8px}
+.rw span{font-size:12px;font-weight:500;min-width:32px;color:#ccc;text-align:right}
+input[type=range]{flex:1;accent-color:#fff;height:3px}
+select{width:100%;padding:6px 8px;font-size:12px;border:1px solid #222;border-radius:7px;background:#181818;color:#ddd}
+input[type=text],input[type=password]{width:100%;padding:7px 10px;font-size:13px;border:1px solid #222;border-radius:7px;background:#181818;color:#eee}
+input[type=text]::placeholder,input[type=password]::placeholder{color:#444}
+textarea{width:100%;padding:9px 10px;font-size:12px;border:1px solid #222;border-radius:7px;background:#181818;color:#eee;resize:vertical;min-height:60px;line-height:1.5}
+textarea::placeholder{color:#444}
+
+/* dropzone */
+.drop{border:1.5px dashed #333;border-radius:10px;padding:1.75rem 1rem;text-align:center;cursor:pointer;background:#161616;transition:background .15s}
+.drop:hover{background:#1e1e1e}
+.drop .ico{font-size:24px;margin-bottom:.35rem;display:block}
+.drop p{font-size:13px;color:#666}
+.drop .sub{font-size:11px;color:#333;margin-top:3px}
+
+/* canvassen */
+.cw{display:grid;gap:10px;margin-top:1rem}
+.cw.d2{grid-template-columns:1fr 1fr}
+.cw.d4{grid-template-columns:1fr 1fr}
+.cbox{display:flex;flex-direction:column;gap:4px}
+.cbox p{font-size:10px;color:#444;text-align:center}
+canvas{width:100%;border-radius:7px;border:1px solid #1e1e1e;display:block;image-rendering:pixelated;background:#111;min-height:48px}
+canvas.sm{image-rendering:auto}
+.hint{font-size:11px;color:#444;text-align:center;margin-top:.4rem;min-height:14px}
+
+/* fx knoppen */
+.fx-wrap{display:flex;flex-wrap:wrap;gap:7px;margin:.25rem 0}
+.fx{display:flex;align-items:center;gap:6px;padding:6px 11px;font-size:11px;border:1px solid #222;border-radius:7px;cursor:pointer;background:#161616;color:#777;transition:all .15s;user-select:none}
+.fx:hover{border-color:#444;color:#bbb}
+.fx.on{border-color:#ddd;color:#eee;background:#1c1c1c}
+.fx .dot{width:7px;height:7px;border-radius:50%;background:#2a2a2a;flex-shrink:0;transition:background .15s}
+.fx.on .dot{background:#eee}
+.fx .sw{width:9px;height:9px;border-radius:2px;flex-shrink:0}
+.fx-sub{display:none;padding:9px 10px;background:#131313;border:1px solid #1a1a1a;border-radius:7px;margin-bottom:.4rem}
+.fx-sub.on{display:block}
+.fx-sub .rw{margin-bottom:5px}
+.fx-sub .rw:last-child{margin-bottom:0}
+.fx-sub label{font-size:11px;color:#555;min-width:80px}
+.fx-sub select{flex:1;width:auto}
+
+/* knoppen */
+.btns{display:flex;gap:7px;margin-top:1rem;flex-wrap:wrap}
+button{flex:1;min-width:80px;padding:8px 10px;font-size:12px;border:1px solid #222;border-radius:7px;cursor:pointer;background:transparent;color:#aaa;transition:all .15s;white-space:nowrap}
+button:hover{background:#1a1a1a;color:#eee}
+button:active{transform:scale(.97)}
+button.pri{background:#eee;color:#111;border-color:#eee}
+button.pri:hover{opacity:.88}
+button.red{border-color:#2a1010;color:#c04040}
+button.red:hover{background:#180a0a}
+button.go{background:#0c260c;color:#2db52d;border-color:#164a16;font-weight:500}
+button.go:hover{background:#102a10}
+button:disabled{opacity:.3;cursor:not-allowed;transform:none}
+
+/* pictogram maker */
+.icon-sizes{display:flex;flex-wrap:wrap;gap:6px;margin:.5rem 0}
+.sz-btn{padding:5px 10px;font-size:11px;border:1px solid #222;border-radius:6px;cursor:pointer;background:#161616;color:#777;transition:all .15s}
+.sz-btn.on{border-color:#aaa;color:#eee;background:#1c1c1c}
+.preview-row{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-top:.75rem}
+.preview-row .pv{display:flex;flex-direction:column;align-items:center;gap:4px}
+.preview-row .pv span{font-size:10px;color:#444}
+.preview-row canvas{border-radius:4px;image-rendering:pixelated}
+
+/* pixel editor */
+#editor-wrap{overflow:auto;margin-top:.75rem;border:1px solid #1e1e1e;border-radius:8px;background:#0d0d0d;padding:.5rem}
+#pixel-editor{display:grid;gap:1px;cursor:crosshair;width:fit-content;margin:0 auto}
+.pe-cell{width:18px;height:18px;border:1px solid #1e1e1e;background:#000;transition:background .05s}
+.color-palette{display:flex;flex-wrap:wrap;gap:5px;margin:.6rem 0}
+.cp-swatch{width:22px;height:22px;border-radius:4px;cursor:pointer;border:2px solid transparent;flex-shrink:0}
+.cp-swatch.active{border-color:#fff}
+.tools{display:flex;gap:6px;margin-bottom:.5rem}
+.tool-btn{padding:5px 10px;font-size:11px;border:1px solid #222;border-radius:6px;cursor:pointer;background:#161616;color:#777}
+.tool-btn.on{border-color:#aaa;color:#eee;background:#1c1c1c}
+
+/* AI tab */
+.apibar{display:flex;gap:7px;margin-bottom:.75rem;align-items:center}
+.apibar input{flex:1}
+.info-box{font-size:11px;color:#3a3a3a;margin-bottom:1rem;line-height:1.6;padding:9px 10px;border:1px solid #181818;border-radius:7px;background:#131313}
+.theme-wrap{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.tbtn{padding:5px 12px;font-size:12px;border:1px solid #222;border-radius:16px;cursor:pointer;background:#161616;color:#888;transition:all .15s}
+.tbtn:hover{border-color:#444;color:#ccc}
+.tbtn.on{background:#eee;color:#111;border-color:#eee}
+.status{font-size:12px;text-align:center;padding:.6rem 0;min-height:32px;color:#555}
+.status.load{color:#d4860a}
+.status.err{color:#c04040}
+.status.ok{color:#2db52d}
+.manage{margin-top:1.25rem;padding-top:1rem;border-top:1px solid #1a1a1a}
+.manage h3{font-size:10px;color:#444;margin-bottom:8px;font-weight:400;text-transform:uppercase;letter-spacing:.06em}
+.stags{display:flex;flex-wrap:wrap;gap:6px}
+.stag{display:flex;align-items:center;gap:5px;padding:4px 9px;background:#161616;border:1px solid #1e1e1e;border-radius:14px;font-size:11px;color:#888}
+.stag .x{cursor:pointer;color:#333;font-size:13px;line-height:1}
+.stag .x:hover{color:#c04040}
+</style>
+</head>
+<body>
+
+<h1>Pixel Studio</h1>
+<div class="tabs">
+  <button class="tab active" onclick="T('bewerken')">Bewerken</button>
+  <button class="tab" onclick="T('pictogram')">Pictogram</button>
+  <button class="tab" onclick="T('generator')">AI Generator</button>
+</div>
+
+<!-- ══════════ TAB: BEWERKEN ══════════ -->
+<div class="panel active" id="panel-bewerken">
+  <div class="drop" id="bw-drop" onclick="document.getElementById('bw-file').click()">
+    <span class="ico">&#128247;</span><p>Klik of sleep een foto</p><p class="sub">JPG / PNG / WEBP</p>
+  </div>
+  <input type="file" id="bw-file" accept="image/*" style="display:none">
+
+  <div id="bw-ui" style="display:none">
+    <!-- AANPASSEN -->
+    <div class="sec">Aanpassen</div>
+    <div class="grid2">
+      <div class="ctrl"><label>Helderheid</label><div class="rw"><input type="range" id="b-bright" min="-100" max="100" step="1" value="0"><span id="b-brightv">0</span></div></div>
+      <div class="ctrl"><label>Contrast</label><div class="rw"><input type="range" id="b-con" min="0.5" max="2.5" step="0.05" value="1"><span id="b-conv">1.0</span></div></div>
+      <div class="ctrl"><label>Kleurtemperatuur</label><div class="rw"><input type="range" id="b-temp" min="-80" max="80" step="1" value="0"><span id="b-tempv">0</span></div></div>
+      <div class="ctrl"><label>Verzadiging</label><div class="rw"><input type="range" id="b-sat" min="0" max="3" step="0.05" value="1"><span id="b-satv">1.0</span></div></div>
+      <div class="ctrl"><label>Scherpte</label><div class="rw"><input type="range" id="b-sharp" min="0" max="5" step="0.1" value="0"><span id="b-sharpv">0</span></div></div>
+      <div class="ctrl"><label>Vignette</label><div class="rw"><input type="range" id="b-vig" min="0" max="1" step="0.05" value="0"><span id="b-vigv">0</span></div></div>
+    </div>
+    <div style="display:flex;gap:7px;margin-top:.6rem">
+      <button onclick="resetAdj()" style="flex:0;padding:6px 12px;font-size:11px">Reset aanpassingen</button>
+    </div>
+
+    <!-- STIJL / RASTER -->
+    <div class="sec">Pixelraster</div>
+    <div class="grid2">
+      <div class="ctrl"><label>Rastergrootte</label><div class="rw"><input type="range" id="b-grid" min="1" max="129" step="1" value="16"><span id="b-gridv">16</span></div></div>
+      <div class="ctrl"><label>Kleurpalet</label>
+        <select id="b-pal">
+          <option value="full">Originele kleuren</option>
+          <option value="bw">Zwart-wit</option>
+          <option value="neon">Neon</option>
+          <option value="gameboy">Gameboy</option>
+          <option value="c64">C64</option>
+          <option value="thermal">Thermisch</option>
+          <option value="sepia">Sepia / vintage</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- EFFECTEN -->
+    <div class="sec">Effecten</div>
+    <div class="fx-wrap">
+      <div class="fx" id="fx-raw" onclick="FX('raw')"><span class="dot"></span>Pixels uit</div>
+      <div class="fx" id="fx-warhol" onclick="FX('warhol')"><span class="dot"></span><span class="sw" style="background:linear-gradient(135deg,#e80 50%,#00f 50%)"></span>Warhol</div>
+      <div class="fx" id="fx-licht" onclick="FX('licht')"><span class="dot"></span><span class="sw" style="background:radial-gradient(circle,#000 40%,#fff 40%)"></span>Lichtenstein</div>
+      <div class="fx" id="fx-verloop" onclick="FX('verloop')"><span class="dot"></span><span class="sw" style="background:linear-gradient(90deg,#f00,#00f)"></span>Kleurverloop</div>
+      <div class="fx" id="fx-glitch" onclick="FX('glitch')"><span class="dot"></span><span class="sw" style="background:linear-gradient(90deg,#f0f,#0ff)"></span>Glitch</div>
+      <div class="fx" id="fx-outline" onclick="FX('outline')"><span class="dot"></span><span class="sw" style="background:#000;border:1px solid #fff"></span>Schets</div>
+      <div class="fx" id="fx-poster" onclick="FX('poster')"><span class="dot"></span><span class="sw" style="background:linear-gradient(135deg,#f00 33%,#ff0 66%,#00f)"></span>Posterisatie</div>
+    </div>
+
+    <!-- FX subopts -->
+    <div class="fx-sub" id="sub-warhol">
+      <div class="rw"><label>Kleurschema</label><select id="wh-scheme" onchange="render()"><option value="classic">Klassiek</option><option value="neon">Neon</option><option value="retro">Retro</option><option value="bw4">Zwart-wit</option></select></div>
+    </div>
+    <div class="fx-sub" id="sub-licht">
+      <div class="rw"><label>Dotgrootte</label><input type="range" id="licht-dot" min="2" max="20" step="1" value="5" oninput="document.getElementById('licht-dotv').textContent=this.value;render()"><span id="licht-dotv" style="font-size:11px;color:#aaa;min-width:20px">5</span></div>
+      <div class="rw"><label>Achtergrond</label><select id="licht-bg" onchange="render()"><option value="#fff">Wit</option><option value="#f5e000">Geel</option><option value="#00f5ff">Cyaan</option><option value="#ff2d78">Roze</option><option value="#000">Zwart</option></select></div>
+    </div>
+    <div class="fx-sub" id="sub-verloop">
+      <div class="rw"><label>Richting</label><select id="vl-dir" onchange="render()"><option value="h">Horizontaal</option><option value="v">Verticaal</option><option value="diag">Diagonaal</option><option value="rad">Radiaal</option></select></div>
+      <div class="rw"><label>Palet A</label><select id="vl-a" onchange="render()"><option value="neon">Neon</option><option value="full">Origineel</option><option value="bw">Zwart-wit</option><option value="thermal">Thermisch</option></select></div>
+      <div class="rw"><label>Palet B</label><select id="vl-b" onchange="render()"><option value="c64">C64</option><option value="gameboy">Gameboy</option><option value="bw">Zwart-wit</option><option value="neon">Neon</option></select></div>
+    </div>
+    <div class="fx-sub" id="sub-poster">
+      <div class="rw"><label>Niveaus</label><input type="range" id="post-lvl" min="2" max="8" step="1" value="4" oninput="document.getElementById('post-lvlv').textContent=this.value;render()"><span id="post-lvlv" style="font-size:11px;color:#aaa;min-width:20px">4</span></div>
+    </div>
+    <div class="fx-sub" id="sub-glitch">
+      <div class="rw"><label>Intensiteit</label><input type="range" id="gl-str" min="5" max="60" step="1" value="20" oninput="document.getElementById('gl-strv').textContent=this.value;render()"><span id="gl-strv" style="font-size:11px;color:#aaa;min-width:20px">20</span></div>
+    </div>
+
+    <!-- canvassen -->
+    <div class="cw d2" id="bw-canvases">
+      <div class="cbox"><canvas id="bw-orig"></canvas><p>origineel</p></div>
+      <div class="cbox"><canvas id="bw-out"></canvas><p id="bw-lbl">resultaat</p></div>
+    </div>
+    <div id="wh-extra" style="display:none;margin-top:10px">
+      <div class="cw d4"><div class="cbox"><canvas id="wh0"></canvas></div><div class="cbox"><canvas id="wh1"></canvas></div><div class="cbox"><canvas id="wh2"></canvas></div><div class="cbox"><canvas id="wh3"></canvas></div></div>
+      <p style="font-size:10px;color:#444;text-align:center;margin-top:4px">warhol 4-delig</p>
+    </div>
+    <div class="hint" id="bw-hint"></div>
+    <div class="btns">
+      <button class="red" onclick="bwReset()">Nieuwe foto</button>
+      <button onclick="dlActive()">PNG</button>
+      <button onclick="dlPDF(activeC())">PDF</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ TAB: PICTOGRAM ══════════ -->
+<div class="panel" id="panel-pictogram">
+  <div class="tabs" style="margin-bottom:1rem">
+    <button class="tab active" onclick="PT('foto')" id="pt-foto">Uit foto</button>
+    <button class="tab" onclick="PT('teken')" id="pt-teken">Zelf tekenen</button>
+  </div>
+
+  <!-- PICTOGRAM UIT FOTO -->
+  <div id="pt-panel-foto">
+    <div class="drop" id="ic-drop" onclick="document.getElementById('ic-file').click()">
+      <span class="ico">&#128444;</span><p>Foto als basis voor icoon</p><p class="sub">Beste resultaat: foto met duidelijk onderwerp</p>
+    </div>
+    <input type="file" id="ic-file" accept="image/*" style="display:none">
+
+    <div id="ic-ui" style="display:none">
+      <div class="sec">Icoon instellingen</div>
+      <div class="grid2">
+        <div class="ctrl"><label>Vorm</label>
+          <select id="ic-shape">
+            <option value="square">Vierkant</option>
+            <option value="round">Afgerond (app-stijl)</option>
+            <option value="circle">Cirkel</option>
+            <option value="none">Geen (transparant)</option>
+          </select></div>
+        <div class="ctrl"><label>Achtergrondkleur</label>
+          <select id="ic-bg">
+            <option value="#000">Zwart</option>
+            <option value="#fff">Wit</option>
+            <option value="#1a1aff">Blauw</option>
+            <option value="#cc0000">Rood</option>
+            <option value="#00aa44">Groen</option>
+            <option value="#ff6600">Oranje</option>
+            <option value="transparent">Transparant</option>
+          </select></div>
+        <div class="ctrl"><label>Pixelstijl</label>
+          <select id="ic-style">
+            <option value="pixel">Pixel art</option>
+            <option value="smooth">Glad (origineel)</option>
+            <option value="bw">Zwart-wit pixel</option>
+            <option value="neon">Neon pixel</option>
+          </select></div>
+        <div class="ctrl"><label>Rastergrootte icoon</label><div class="rw"><input type="range" id="ic-grid" min="4" max="32" step="1" value="8"><span id="ic-gridv">8</span></div></div>
+      </div>
+      <div class="ctrl" style="margin-top:.5rem"><label>Outline / rand</label>
+        <select id="ic-outline">
+          <option value="none">Geen rand</option>
+          <option value="white">Witte rand</option>
+          <option value="black">Zwarte rand</option>
+          <option value="shadow">Slagschaduw</option>
+        </select></div>
+
+      <div class="sec">Export formaten</div>
+      <div class="icon-sizes" id="ic-sizes">
+        <div class="sz-btn on" data-sz="16">16px</div>
+        <div class="sz-btn on" data-sz="32">32px</div>
+        <div class="sz-btn on" data-sz="64">64px</div>
+        <div class="sz-btn on" data-sz="128">128px</div>
+        <div class="sz-btn on" data-sz="256">256px</div>
+        <div class="sz-btn" data-sz="512">512px</div>
+      </div>
+
+      <div class="sec">Voorvertoning</div>
+      <div class="preview-row" id="ic-preview"></div>
+
+      <div class="btns" style="margin-top:1rem">
+        <button class="red" onclick="icReset()">Nieuw</button>
+        <button onclick="icDownloadAll()">Download alle maten (ZIP)</button>
+        <button class="pri" onclick="icDownloadSVG()">Download SVG</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PIXEL EDITOR ZELF TEKENEN -->
+  <div id="pt-panel-teken" style="display:none">
+    <div class="grid2" style="margin-bottom:.75rem">
+      <div class="ctrl"><label>Rastergrootte</label>
+        <select id="pe-size" onchange="initEditor()">
+          <option value="8">8 x 8 (favicon)</option>
+          <option value="16" selected>16 x 16 (icoon)</option>
+          <option value="32">32 x 32 (detail)</option>
+        </select></div>
+      <div class="ctrl"><label>Achtergrond</label>
+        <select id="pe-bg" onchange="initEditor()">
+          <option value="#000">Zwart</option>
+          <option value="#fff">Wit</option>
+          <option value="transparent">Transparant</option>
+        </select></div>
+    </div>
+    <div class="tools">
+      <button class="tool-btn on" id="tool-pen" onclick="setTool('pen')">Pen</button>
+      <button class="tool-btn" id="tool-erase" onclick="setTool('erase')">Gum</button>
+      <button class="tool-btn" id="tool-fill" onclick="setTool('fill')">Emmer</button>
+      <button onclick="clearEditor()" style="flex:0;padding:5px 10px;font-size:11px">Leeg</button>
+      <button onclick="undoEditor()" style="flex:0;padding:5px 10px;font-size:11px">Ongedaan</button>
+    </div>
+    <div class="color-palette" id="pe-palette"></div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:.5rem">
+      <span style="font-size:11px;color:#555">Eigen kleur:</span>
+      <input type="color" id="pe-custom-color" value="#ff0000" style="width:32px;height:28px;border:none;background:none;cursor:pointer;padding:0">
+      <button onclick="addCustomColor()" style="flex:0;padding:4px 10px;font-size:11px">+ Toevoegen</button>
+    </div>
+    <div id="editor-wrap"><div id="pixel-editor"></div></div>
+    <div class="btns" style="margin-top:.75rem">
+      <button onclick="peExport(16,'pe16.png')">PNG 16px</button>
+      <button onclick="peExport(32,'pe32.png')">PNG 32px</button>
+      <button onclick="peExport(64,'pe64.png')">PNG 64px</button>
+      <button class="pri" onclick="peExportSVG()">SVG</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ TAB: AI GENERATOR ══════════ -->
+<div class="panel" id="panel-generator">
+  <div class="apibar">
+    <input type="password" id="api-key" placeholder="Anthropic API key (sk-ant-…)">
+    <button style="flex:0;padding:7px 12px;font-size:11px" onclick="saveKey()">Opslaan</button>
+    <span id="key-st" style="font-size:10px;color:#2db52d;white-space:nowrap"></span>
+  </div>
+  <div class="info-box">Key wordt lokaal opgeslagen. Aanmaken via console.anthropic.com</div>
+  <div style="font-size:11px;color:#555;margin-bottom:.5rem">Thema</div>
+  <div class="theme-wrap" id="theme-wrap"></div>
+  <div style="display:flex;gap:7px;margin-bottom:1rem">
+    <input type="text" id="new-theme" placeholder="Eigen thema toevoegen…" style="flex:1">
+    <button onclick="addTheme()" style="flex:0;padding:7px 12px;font-size:11px">+ Toevoegen</button>
+  </div>
+  <div style="margin-bottom:.75rem">
+    <label style="font-size:11px;color:#555;display:block;margin-bottom:5px">Beschrijving</label>
+    <textarea id="gen-prompt" placeholder="Kies een thema of schrijf zelf…"></textarea>
+  </div>
+  <div class="grid2" style="margin-bottom:1rem">
+    <div class="ctrl"><label>Rastergrootte</label><div class="rw"><input type="range" id="gen-grid" min="4" max="48" step="1" value="16"><span id="gen-gridv">16</span></div></div>
+    <div class="ctrl"><label>Palet</label><select id="gen-pal"><option value="neon">Neon</option><option value="full">Origineel</option><option value="gameboy">Gameboy</option><option value="c64">C64</option><option value="bw">Zwart-wit</option></select></div>
+  </div>
+  <button class="go" id="gen-btn" onclick="generate()">Genereer pixel art</button>
+  <div id="gen-res" style="display:none;margin-top:1rem">
+    <div class="status" id="gen-st"></div>
+    <div class="cw d2">
+      <div class="cbox"><canvas id="gen-src"></canvas><p>SVG bron</p></div>
+      <div class="cbox"><canvas id="gen-pix"></canvas><p>pixel art</p></div>
+    </div>
+    <div class="btns" id="gen-btns" style="display:none">
+      <button onclick="dlPNG('gen-pix','pixel_ai.png')">PNG</button>
+      <button class="pri" onclick="dlPDF('gen-pix')">PDF</button>
+      <button onclick="sendToIcon()">Naar icoon</button>
+    </div>
+  </div>
+  <div class="manage"><h3>Eigen themas</h3><div class="stags" id="stags"></div></div>
+</div>
+
+<script>
+// ══ TABS
+function T(n){['bewerken','pictogram','generator'].forEach((v,i)=>{document.querySelectorAll('.tab')[i].classList.toggle('active',v===n);document.getElementById('panel-'+v).classList.toggle('active',v===n);});}
+function PT(n){['foto','teken'].forEach(v=>{document.getElementById('pt-'+v).classList.toggle('active',v===n);document.getElementById('pt-panel-'+v).style.display=v===n?'block':'none';});}
+
+// ══ PALETTEN
+const GB=[[15,56,15],[48,98,48],[139,172,15],[155,188,15]];
+const C6=[[0,0,0],[255,255,255],[136,0,0],[170,255,238],[204,68,204],[0,204,85],[0,0,170],[238,238,119],[221,136,85],[102,68,0],[255,119,119],[51,51,51],[119,119,119],[170,255,102],[0,136,255],[187,187,187]];
+const WH_COL={classic:['#e8001c','#f5e000','#0057b8','#00a550'],neon:['#ff2d78','#00f5ff','#f5ff00','#c800ff'],retro:['#e8601c','#a0522d','#c8a000','#556b2f'],bw4:['#ffffff','#aaaaaa','#555555','#111111']};
+
+function nc(r,g,b,p){let best=0,bd=1e9;p.forEach(([pr,pg,pb],i)=>{const d=(r-pr)**2+(g-pg)**2+(b-pb)**2;if(d<bd){bd=d;best=i}});return p[best];}
+function aC(v,f){return Math.min(255,Math.max(0,Math.round((v-128)*f+128)));}
+function aS(r,g,b,s){const gr=.299*r+.587*g+.114*b;return[r,g,b].map(c=>Math.min(255,Math.max(0,Math.round(gr+(c-gr)*s))));}
+function h2r(h){return[parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];}
+
+function applyPal(r,g,b,pal){
+  if(pal==='bw'){const v=Math.round(.299*r+.587*g+.114*b);return[v,v,v];}
+  if(pal==='gameboy')return nc(r,g,b,GB);
+  if(pal==='c64')return nc(r,g,b,C6);
+  if(pal==='thermal'){const v=(.299*r+.587*g+.114*b)/255;if(v<.25)return[0,0,Math.round(v*4*255)];if(v<.5)return[0,Math.round((v-.25)*4*255),255];if(v<.75)return[Math.round((v-.5)*4*255),255,Math.round((1-(v-.5)*4)*255)];return[255,Math.round((1-(v-.75)*4)*255),0];}
+  if(pal==='sepia'){const v=.299*r+.587*g+.114*b;return[Math.min(255,Math.round(v*.393+.769*128+.189*128)),Math.min(255,Math.round(v*.349+.686*128+.168*128)),Math.min(255,Math.round(v*.272+.534*128+.131*128))];}
+  if(pal==='neon'){const m=Math.max(r,g,b);if(m<30)return[0,0,0];const bst=Math.min(255,Math.round(m*1.6));if(r>=g&&r>=b)return[bst,Math.round(g*(bst/m)*.4),Math.round(b*(bst/m)*.4)];if(g>=r&&g>=b)return[Math.round(r*(bst/m)*.3),bst,Math.round(b*(bst/m)*.5)];return[Math.round(r*(bst/m)*.4),Math.round(g*(bst/m)*.4),bst];}
+  return[r,g,b];
+}
+
+// ══ AANPASSINGEN op source canvas
+function applyAdj(srcC,dstC){
+  const bright=+document.getElementById('b-bright').value;
+  const con=+document.getElementById('b-con').value;
+  const temp=+document.getElementById('b-temp').value;
+  const sat=+document.getElementById('b-sat').value;
+  const sharp=+document.getElementById('b-sharp').value;
+  const vig=+document.getElementById('b-vig').value;
+  const sw=srcC.width,sh=srcC.height;
+  dstC.width=sw;dstC.height=sh;
+  const sc=srcC.getContext('2d'),dc=dstC.getContext('2d');
+  const id=sc.getImageData(0,0,sw,sh),od=new ImageData(sw,sh);
+  const cx=sw/2,cy=sh/2,maxD=Math.sqrt(cx*cx+cy*cy);
+  for(let y=0;y<sh;y++)for(let x=0;x<sw;x++){
+    const i=(y*sw+x)*4;
+    let r=id.data[i],g=id.data[i+1],b=id.data[i+2];
+    // brightness
+    r=Math.min(255,Math.max(0,r+bright));g=Math.min(255,Math.max(0,g+bright));b=Math.min(255,Math.max(0,b+bright));
+    // contrast
+    r=aC(r,con);g=aC(g,con);b=aC(b,con);
+    // temp: warm=+r-b, cool=-r+b
+    r=Math.min(255,Math.max(0,r+temp));b=Math.min(255,Math.max(0,b-temp));
+    // sat
+    [r,g,b]=aS(r,g,b,sat);
+    // vignette
+    if(vig>0){const d=Math.sqrt((x-cx)**2+(y-cy)**2)/maxD;const f=1-vig*d*d;r=Math.round(r*f);g=Math.round(g*f);b=Math.round(b*f);}
+    od.data[i]=r;od.data[i+1]=g;od.data[i+2]=b;od.data[i+3]=255;
+  }
+  dc.putImageData(od,0,0);
+  // sharpness (unsharp mask via convolution)
+  if(sharp>0){
+    const sharpened=dc.getImageData(0,0,sw,sh);
+    const orig2=new Uint8ClampedArray(sharpened.data);
+    for(let y=1;y<sh-1;y++)for(let x=1;x<sw-1;x++){
+      const i=(y*sw+x)*4;
+      for(let c=0;c<3;c++){
+        const lap=4*orig2[i+c]-orig2[i-4+c]-orig2[i+4+c]-orig2[(y-1)*sw*4+x*4+c]-orig2[(y+1)*sw*4+x*4+c];
+        sharpened.data[i+c]=Math.min(255,Math.max(0,orig2[i+c]+sharp*lap/4));
+      }
+    }
+    dc.putImageData(sharpened,0,0);
+  }
+}
+
+// ══ PIXELISEER
+function pixelize(src,dst,gs,pal){
+  const sw=src.width,sh=src.height,cols=Math.floor(sw/gs),rows=Math.floor(sh/gs);
+  if(cols<1||rows<1)return;
+  const tmp=document.createElement('canvas');tmp.width=cols;tmp.height=rows;
+  const tc=tmp.getContext('2d');tc.drawImage(src,0,0,cols,rows);
+  const td=tc.getImageData(0,0,cols,rows);
+  dst.width=cols*gs;dst.height=rows*gs;
+  const dc=dst.getContext('2d');
+  dc.fillStyle=pal==='neon'?'#000':'#111';dc.fillRect(0,0,dst.width,dst.height);
+  for(let row=0;row<rows;row++)for(let col=0;col<cols;col++){
+    const idx=(row*cols+col)*4;
+    const[fr,fg,fb]=applyPal(td.data[idx],td.data[idx+1],td.data[idx+2],pal);
+    const gap=gs>2?1:0;dc.fillStyle=`rgb(${fr},${fg},${fb})`;dc.fillRect(col*gs,row*gs,gs-gap,gs-gap);
+  }
+}
+
+function pixelizeVerloop(src,dst,gs,palA,palB,dir){
+  const sw=src.width,sh=src.height,cols=Math.floor(sw/gs),rows=Math.floor(sh/gs);
+  if(cols<1||rows<1)return;
+  const tmp=document.createElement('canvas');tmp.width=cols;tmp.height=rows;
+  const tc=tmp.getContext('2d');tc.drawImage(src,0,0,cols,rows);
+  const td=tc.getImageData(0,0,cols,rows);
+  dst.width=cols*gs;dst.height=rows*gs;
+  const dc=dst.getContext('2d');dc.fillStyle='#111';dc.fillRect(0,0,dst.width,dst.height);
+  for(let row=0;row<rows;row++)for(let col=0;col<cols;col++){
+    let t;
+    if(dir==='h')t=col/(cols-1||1);else if(dir==='v')t=row/(rows-1||1);
+    else if(dir==='diag')t=(col/(cols-1||1)+row/(rows-1||1))/2;
+    else{const cx=cols/2,cy=rows/2;t=Math.min(1,Math.sqrt((col-cx)**2+(row-cy)**2)/Math.sqrt(cx**2+cy**2));}
+    const idx=(row*cols+col)*4;
+    const r0=td.data[idx],g0=td.data[idx+1],b0=td.data[idx+2];
+    const[rA,gA,bA]=applyPal(r0,g0,b0,palA);
+    const[rB,gB,bB]=applyPal(r0,g0,b0,palB);
+    const gapV=gs>2?1:0;
+    dc.fillStyle=`rgb(${Math.round(rA*(1-t)+rB*t)},${Math.round(gA*(1-t)+gB*t)},${Math.round(bA*(1-t)+bB*t)})`;
+    dc.fillRect(col*gs,row*gs,gs-gapV,gs-gapV);
+  }
+}
+
+function applyWarhol(src,canvases,gs,pal,scheme){
+  const cols2=WH_COL[scheme]||WH_COL.classic;
+  const sw=src.width,sh=src.height;
+  const effGs=Math.max(1,gs);
+  const cols=Math.floor(sw/effGs),rows=Math.floor(sh/effGs);
+  if(cols<1||rows<1)return;
+  const tmp=document.createElement('canvas');tmp.width=cols;tmp.height=rows;
+  tmp.getContext('2d').drawImage(src,0,0,cols,rows);
+  const td=tmp.getContext('2d').getImageData(0,0,cols,rows);
+  canvases.forEach((dst,i)=>{
+    const col=cols2[i%4],[cr,cg,cb]=h2r(col);
+    dst.width=cols*effGs;dst.height=rows*effGs;
+    const dc=dst.getContext('2d');dc.fillStyle='#000';dc.fillRect(0,0,dst.width,dst.height);
+    for(let row=0;row<rows;row++)for(let c=0;c<cols;c++){
+      const idx=(row*cols+c)*4;
+      const t=(.299*td.data[idx]+.587*td.data[idx+1]+.114*td.data[idx+2])/255;
+      const gapW=gs>2?1:0;
+      dc.fillStyle=`rgb(${Math.round(cr*t)},${Math.round(cg*t)},${Math.round(cb*t)})`;
+      const wgap=effGs>2?1:0;dc.fillRect(c*effGs,row*effGs,effGs-wgap,effGs-wgap);
+    }
+  });
+}
+
+function applyLicht(src,dst,dotSize,bgColor){
+  const sw=src.width,sh=src.height;
+  dst.width=sw;dst.height=sh;dst.classList.add('sm');
+  const dc=dst.getContext('2d');
+  dc.fillStyle=bgColor;dc.fillRect(0,0,sw,sh);
+  const tmp=document.createElement('canvas');tmp.width=sw;tmp.height=sh;
+  tmp.getContext('2d').drawImage(src,0,0,sw,sh);
+  const id=tmp.getContext('2d').getImageData(0,0,sw,sh);
+  dc.fillStyle='#111';
+  for(let y=0;y<sh;y+=dotSize)for(let x=0;x<sw;x+=dotSize){
+    const idx=((Math.min(Math.floor(y),sh-1)*sw)+Math.min(Math.floor(x),sw-1))*4;
+    const gray=(.299*id.data[idx]+.587*id.data[idx+1]+.114*id.data[idx+2])/255;
+    const rad=(dotSize/2)*gray*.92;
+    if(rad>0.4){dc.beginPath();dc.arc(x+dotSize/2,y+dotSize/2,rad,0,Math.PI*2);dc.fill();}
+  }
+  // outline
+  for(let y=1;y<sh-1;y++)for(let x=1;x<sw-1;x++){
+    const i=(y*sw+x)*4;
+    const gL=.299*id.data[i-4]+.587*id.data[i-3]+.114*id.data[i-2];
+    const gR=.299*id.data[i+4]+.587*id.data[i+3]+.114*id.data[i+2];
+    const gT=.299*id.data[(y-1)*sw*4+x*4]+.587*id.data[(y-1)*sw*4+x*4+1]+.114*id.data[(y-1)*sw*4+x*4+2];
+    const gB2=.299*id.data[(y+1)*sw*4+x*4]+.587*id.data[(y+1)*sw*4+x*4+1]+.114*id.data[(y+1)*sw*4+x*4+2];
+    if(Math.sqrt((gR-gL)**2+(gB2-gT)**2)>45)dc.fillRect(x,y,1,1);
+  }
+}
+
+function applyGlitch(src,dst,str){
+  const sw=src.width,sh=src.height;
+  dst.width=sw;dst.height=sh;dst.classList.add('sm');
+  const dc=dst.getContext('2d');
+  const tmp=document.createElement('canvas');tmp.width=sw;tmp.height=sh;
+  tmp.getContext('2d').drawImage(src,0,0,sw,sh);
+  const id=tmp.getContext('2d').getImageData(0,0,sw,sh),od=new ImageData(sw,sh);
+  for(let y=0;y<sh;y++){
+    const shift=Math.random()<.15?Math.round((Math.random()-.5)*str*2):0;
+    for(let x=0;x<sw;x++){
+      const si=(y*sw+Math.min(sw-1,Math.max(0,x+shift)))*4;
+      const di=(y*sw+x)*4;
+      od.data[di]=id.data[si];
+      od.data[di+1]=id.data[(y*sw+Math.min(sw-1,Math.max(0,x)))*4+1];
+      od.data[di+2]=id.data[(y*sw+Math.min(sw-1,Math.max(0,x-shift)))*4+2];
+      od.data[di+3]=255;
+    }
+  }
+  dc.putImageData(od,0,0);
+}
+
+function applyOutline(src,dst){
+  const sw=src.width,sh=src.height;
+  dst.width=sw;dst.height=sh;dst.classList.add('sm');
+  const dc=dst.getContext('2d');
+  const tmp=document.createElement('canvas');tmp.width=sw;tmp.height=sh;
+  tmp.getContext('2d').drawImage(src,0,0,sw,sh);
+  const id=tmp.getContext('2d').getImageData(0,0,sw,sh),od=new ImageData(sw,sh);
+  dc.fillStyle='#fff';dc.fillRect(0,0,sw,sh);
+  for(let y=1;y<sh-1;y++)for(let x=1;x<sw-1;x++){
+    const i=(y*sw+x)*4;
+    const g=(.299*id.data[i]+.587*id.data[i+1]+.114*id.data[i+2]);
+    const gR=(.299*id.data[i+4]+.587*id.data[i+5]+.114*id.data[i+6]);
+    const gB2=(.299*id.data[(y+1)*sw*4+x*4]+.587*id.data[(y+1)*sw*4+x*4+1]+.114*id.data[(y+1)*sw*4+x*4+2]);
+    const mag=Math.sqrt((gR-g)**2+(gB2-g)**2);
+    od.data[i]=od.data[i+1]=od.data[i+2]=mag>30?0:255;od.data[i+3]=255;
+  }
+  dc.putImageData(od,0,0);
+}
+
+function applyPoster(src,dst,levels){
+  const sw=src.width,sh=src.height;
+  dst.width=sw;dst.height=sh;dst.classList.add('sm');
+  const dc=dst.getContext('2d');
+  const tmp=document.createElement('canvas');tmp.width=sw;tmp.height=sh;
+  tmp.getContext('2d').drawImage(src,0,0,sw,sh);
+  const id=tmp.getContext('2d').getImageData(0,0,sw,sh),od=new ImageData(sw,sh);
+  const step=255/(levels-1);
+  for(let i=0;i<id.data.length;i+=4){
+    od.data[i]=Math.round(Math.round(id.data[i]/step)*step);
+    od.data[i+1]=Math.round(Math.round(id.data[i+1]/step)*step);
+    od.data[i+2]=Math.round(Math.round(id.data[i+2]/step)*step);
+    od.data[i+3]=255;
+  }
+  dc.putImageData(od,0,0);
+}
+
+// ══ FX STATE
+const fx={raw:false,warhol:false,licht:false,verloop:false,glitch:false,outline:false,poster:false};
+function FX(name){
+  fx[name]=!fx[name];
+  if(name==='warhol'&&fx.warhol){fx.raw=false;const rb=document.getElementById('fx-raw');if(rb)rb.classList.remove('on');}
+  if(fx[name]&&name!=='warhol')Object.keys(fx).forEach(k=>{if(k!==name&&k!=='warhol')fx[k]=false;});
+  Object.keys(fx).forEach(k=>{
+    const b=document.getElementById('fx-'+k);if(b)b.classList.toggle('on',fx[k]);
+    const s=document.getElementById('sub-'+k);if(s)s.classList.toggle('on',fx[k]);
+  });
+  document.getElementById('wh-extra').style.display=fx.warhol?'block':'none';
+  render();
+}
+
+// ══ BEWERKEN RENDER
+let bwImg=null,adjC=null;
+function bwReset(){
+  bwImg=null;adjC=null;
+  document.getElementById('bw-ui').style.display='none';document.getElementById('bw-drop').style.display='block';
+  Object.keys(fx).forEach(k=>{fx[k]=false;const b=document.getElementById('fx-'+k);if(b)b.classList.remove('on');const s=document.getElementById('sub-'+k);if(s)s.classList.remove('on');});
+  document.getElementById('wh-extra').style.display='none';
+}
+function resetAdj(){
+  [['b-bright',0],['b-con',1],['b-temp',0],['b-sat',1],['b-sharp',0],['b-vig',0]].forEach(([id,v])=>{
+    document.getElementById(id).value=v;
+    const out=document.getElementById(id+'v');if(out)out.textContent=parseFloat(v).toFixed(id==='b-con'||id==='b-sat'?1:0);
+  });
+  render();
+}
+
+function render(){
+  if(!bwImg)return;
+  const size=Math.min(bwImg.naturalWidth,bwImg.naturalHeight,460),asp=bwImg.naturalWidth/bwImg.naturalHeight;
+  let sw,sh;if(asp>=1){sw=Math.round(size);sh=Math.round(size/asp);}else{sh=Math.round(size);sw=Math.round(size*asp);}
+  // bron canvas
+  const oc=document.getElementById('bw-orig');oc.width=sw;oc.height=sh;oc.getContext('2d').drawImage(bwImg,0,0,sw,sh);
+  // aanpassingen toepassen op tijdelijk canvas
+  if(!adjC||adjC.width!==sw||adjC.height!==sh){adjC=document.createElement('canvas');adjC.width=sw;adjC.height=sh;}
+  applyAdj(oc,adjC);
+  if(!adjC.width||adjC.width<2){adjC.width=sw;adjC.height=sh;adjC.getContext('2d').drawImage(oc,0,0);}
+
+  const out=document.getElementById('bw-out');
+  const gsRaw=+document.getElementById('b-grid').value,gs=gsRaw>=129?1:gsRaw,isInf=gsRaw>=129,pal=document.getElementById('b-pal').value;
+
+  if(fx.raw){out.width=sw;out.height=sh;out.classList.add('sm');out.getContext('2d').drawImage(adjC,0,0);document.getElementById('bw-lbl').textContent='origineel (pixels uit)';}
+  else if(fx.licht){applyLicht(adjC,out,+document.getElementById('licht-dot').value,document.getElementById('licht-bg').value);document.getElementById('bw-lbl').textContent='lichtenstein';}
+  else if(fx.verloop){pixelizeVerloop(adjC,out,gs,document.getElementById('vl-a').value,document.getElementById('vl-b').value,document.getElementById('vl-dir').value);document.getElementById('bw-lbl').textContent='kleurverloop';}
+  else if(fx.glitch){applyGlitch(adjC,out,+document.getElementById('gl-str').value);document.getElementById('bw-lbl').textContent='glitch';}
+  else if(fx.outline){applyOutline(adjC,out);document.getElementById('bw-lbl').textContent='schets';}
+  else if(fx.poster){applyPoster(adjC,out,+document.getElementById('post-lvl').value);document.getElementById('bw-lbl').textContent='posterisatie';}
+  else if(isInf&&pal==='full'){out.width=sw;out.height=sh;out.classList.add('sm');out.getContext('2d').drawImage(adjC,0,0);document.getElementById('bw-lbl').textContent='origineel kwaliteit (∞)';}
+  else if(gs<=1){out.width=adjC.width;out.height=adjC.height;out.classList.add('sm');out.getContext('2d').drawImage(adjC,0,0);document.getElementById('bw-lbl').textContent='pixel art (∞)';}
+  else{out.classList.remove('sm');pixelize(adjC,out,gs,pal);document.getElementById('bw-lbl').textContent='pixel art';}
+  if(!fx.raw&&!fx.licht&&!fx.glitch&&!fx.outline&&!fx.poster)out.classList.remove('sm');
+
+  if(fx.warhol&&adjC&&adjC.width>1&&adjC.height>1)applyWarhol(adjC,['wh0','wh1','wh2','wh3'].map(id=>document.getElementById(id)),gs,pal,document.getElementById('wh-scheme').value);
+
+  const cols=Math.floor(sw/gs),rows=Math.floor(sh/gs);
+  document.getElementById('bw-hint').textContent=fx.raw?`${sw}x${sh}px origineel`:gsRaw>=129?`${sw}x${sh}px — volledige resolutie (∞)`:`${cols}x${rows} px — raster ${gs}`;
+}
+
+function bwLoad(f){
+  if(!f||!f.type.startsWith('image/'))return;
+  bwImg=new Image();bwImg.onload=()=>{document.getElementById('bw-drop').style.display='none';document.getElementById('bw-ui').style.display='block';render();};
+  bwImg.src=URL.createObjectURL(f);
+}
+document.getElementById('bw-file').addEventListener('change',e=>bwLoad(e.target.files[0]));
+document.getElementById('bw-drop').addEventListener('dragover',e=>{e.preventDefault();e.currentTarget.style.background='#1e1e1e';});
+document.getElementById('bw-drop').addEventListener('dragleave',e=>{e.currentTarget.style.background='#161616';});
+document.getElementById('bw-drop').addEventListener('drop',e=>{e.preventDefault();e.currentTarget.style.background='#161616';bwLoad(e.dataTransfer.files[0]);});
+
+// slider listeners
+[['b-bright','b-brightv',v=>+v],['b-con','b-conv',v=>parseFloat(v).toFixed(1)],['b-temp','b-tempv',v=>+v],['b-sat','b-satv',v=>parseFloat(v).toFixed(1)],['b-sharp','b-sharpv',v=>parseFloat(v).toFixed(1)],['b-vig','b-vigv',v=>parseFloat(v).toFixed(2)],['b-grid','b-gridv',v=>+v]].forEach(([id,out,fmt])=>{
+  document.getElementById(id).addEventListener('input',()=>{document.getElementById(out).textContent=fmt(document.getElementById(id).value);render();});
+});
+document.getElementById('b-pal').addEventListener('change',render);
+
+function activeC(){return fx.warhol?'wh0':'bw-out';}
+function dlActive(){
+  if(fx.warhol){
+    const panels=['wh0','wh1','wh2','wh3'].map(id=>document.getElementById(id));
+    if(!panels[0]||panels[0].width<2){alert('Geen afbeelding');return;}
+    const w=panels[0].width,h=panels[0].height;
+    const m=document.createElement('canvas');m.width=w*2;m.height=h*2;
+    const mc=m.getContext('2d');
+    mc.drawImage(panels[0],0,0);mc.drawImage(panels[1],w,0);mc.drawImage(panels[2],0,h);mc.drawImage(panels[3],w,h);
+    const a=document.createElement('a');a.href=m.toDataURL('image/png');a.download='warhol.png';a.click();
+  } else dlPNG('bw-out','resultaat.png');
+}
+
+// ══ PICTOGRAM UIT FOTO
+let icImg=null;
+function icReset(){icImg=null;document.getElementById('ic-file').value='';document.getElementById('ic-ui').style.display='none';document.getElementById('ic-drop').style.display='block';document.getElementById('ic-preview').innerHTML='';}
+function renderIcon(){
+  if(!icImg)return;
+  const shape=document.getElementById('ic-shape').value;
+  const bg=document.getElementById('ic-bg').value;
+  const style=document.getElementById('ic-style').value;
+  const gs=+document.getElementById('ic-grid').value;
+  const outline=document.getElementById('ic-outline').value;
+  const sizes=[16,32,64,128,256,512];
+  const preview=document.getElementById('ic-preview');
+  preview.innerHTML='';
+
+  // bepaal welke maten actief
+  const activeSizes=Array.from(document.querySelectorAll('.sz-btn.on')).map(b=>+b.dataset.sz);
+
+  activeSizes.forEach(sz=>{
+    const c=document.createElement('canvas');c.width=sz;c.height=sz;
+    drawIcon(c,sz,shape,bg,style,gs,outline);
+    const wrap=document.createElement('div');wrap.className='pv';
+    const lbl=document.createElement('span');lbl.textContent=sz+'px';
+    wrap.appendChild(c);wrap.appendChild(lbl);
+    c.style.width=Math.min(sz,96)+'px';c.style.height=Math.min(sz,96)+'px';
+    preview.appendChild(wrap);
+  });
+}
+
+function drawIcon(canvas,sz,shape,bg,style,gs,outline){
+  const ctx=canvas.getContext('2d');
+  ctx.clearRect(0,0,sz,sz);
+  // achtergrond
+  if(bg!=='transparent'){
+    if(shape==='circle'){ctx.beginPath();ctx.arc(sz/2,sz/2,sz/2,0,Math.PI*2);ctx.fillStyle=bg;ctx.fill();}
+    else if(shape==='round'){const r=sz*.225;ctx.beginPath();ctx.moveTo(r,0);ctx.lineTo(sz-r,0);ctx.quadraticCurveTo(sz,0,sz,r);ctx.lineTo(sz,sz-r);ctx.quadraticCurveTo(sz,sz,sz-r,sz);ctx.lineTo(r,sz);ctx.quadraticCurveTo(0,sz,0,sz-r);ctx.lineTo(0,r);ctx.quadraticCurveTo(0,0,r,0);ctx.closePath();ctx.fillStyle=bg;ctx.fill();}
+    else{ctx.fillStyle=bg;ctx.fillRect(0,0,sz,sz);}
+  }
+  // clip naar vorm
+  ctx.save();
+  if(shape==='circle'){ctx.beginPath();ctx.arc(sz/2,sz/2,sz/2,0,Math.PI*2);ctx.clip();}
+  else if(shape==='round'){const r=sz*.225;ctx.beginPath();ctx.moveTo(r,0);ctx.lineTo(sz-r,0);ctx.quadraticCurveTo(sz,0,sz,r);ctx.lineTo(sz,sz-r);ctx.quadraticCurveTo(sz,sz,sz-r,sz);ctx.lineTo(r,sz);ctx.quadraticCurveTo(0,sz,0,sz-r);ctx.lineTo(0,r);ctx.quadraticCurveTo(0,0,r,0);ctx.closePath();ctx.clip();}
+  // foto renderen
+  const pad=Math.round(sz*.08);
+  if(style==='smooth'){ctx.drawImage(icImg,pad,pad,sz-pad*2,sz-pad*2);}
+  else{
+    const tmp=document.createElement('canvas');tmp.width=sz;tmp.height=sz;
+    tmp.getContext('2d').drawImage(icImg,pad,pad,sz-pad*2,sz-pad*2);
+    const pixSrc=document.createElement('canvas');pixSrc.width=sz;pixSrc.height=sz;
+    pixSrc.getContext('2d').drawImage(tmp,0,0);
+    const pal=style==='bw'?'bw':style==='neon'?'neon':'full';
+    pixelize(pixSrc,tmp,Math.max(1,Math.round(gs*(sz/64))),pal);
+    ctx.drawImage(tmp,0,0,sz,sz);
+  }
+  ctx.restore();
+  // outline
+  if(outline==='white'||outline==='black'){ctx.strokeStyle=outline==='white'?'#fff':'#000';ctx.lineWidth=Math.max(1,sz*.04);if(shape==='circle'){ctx.beginPath();ctx.arc(sz/2,sz/2,sz/2-ctx.lineWidth/2,0,Math.PI*2);ctx.stroke();}else{ctx.strokeRect(ctx.lineWidth/2,ctx.lineWidth/2,sz-ctx.lineWidth,sz-ctx.lineWidth);}}
+  if(outline==='shadow'){ctx.shadowColor='rgba(0,0,0,.6)';ctx.shadowBlur=sz*.06;}
+}
+
+function icDownloadAll(){
+  const activeSizes=Array.from(document.querySelectorAll('.sz-btn.on')).map(b=>+b.dataset.sz);
+  const shape=document.getElementById('ic-shape').value,bg=document.getElementById('ic-bg').value,style=document.getElementById('ic-style').value,gs=+document.getElementById('ic-grid').value,outline=document.getElementById('ic-outline').value;
+  activeSizes.forEach(sz=>{
+    const c=document.createElement('canvas');c.width=sz;c.height=sz;
+    drawIcon(c,sz,shape,bg,style,gs,outline);
+    const a=document.createElement('a');a.href=c.toDataURL('image/png');a.download=`icon_${sz}x${sz}.png`;a.click();
+  });
+}
+
+function icDownloadSVG(){
+  const shape=document.getElementById('ic-shape').value,bg=document.getElementById('ic-bg').value;
+  const c=document.createElement('canvas');c.width=256;c.height=256;
+  drawIcon(c,256,shape,bg,document.getElementById('ic-style').value,+document.getElementById('ic-grid').value,document.getElementById('ic-outline').value);
+  const img=c.toDataURL('image/png');
+  const rounding=shape==='round'?'57.6':shape==='circle'?'128':'0';
+  const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256"><defs><clipPath id="cl"><rect width="256" height="256" rx="${rounding}" ry="${rounding}"/></clipPath></defs><image href="${img}" width="256" height="256" clip-path="url(#cl)"/></svg>`;
+  const a=document.createElement('a');a.href='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);a.download='icon.svg';a.click();
+}
+
+function icLoad(f){
+  if(!f||!f.type.startsWith('image/'))return;
+  icImg=new Image();icImg.onload=()=>{document.getElementById('ic-drop').style.display='none';document.getElementById('ic-ui').style.display='block';renderIcon();};
+  icImg.src=URL.createObjectURL(f);
+}
+document.getElementById('ic-file').addEventListener('change',e=>icLoad(e.target.files[0]));
+document.getElementById('ic-drop').addEventListener('dragover',e=>{e.preventDefault();e.currentTarget.style.background='#1e1e1e';});
+document.getElementById('ic-drop').addEventListener('dragleave',e=>{e.currentTarget.style.background='#161616';});
+document.getElementById('ic-drop').addEventListener('drop',e=>{e.preventDefault();e.currentTarget.style.background='#161616';icLoad(e.dataTransfer.files[0]);});
+['ic-shape','ic-bg','ic-style','ic-outline'].forEach(id=>document.getElementById(id).addEventListener('change',renderIcon));
+document.getElementById('ic-grid').addEventListener('input',()=>{document.getElementById('ic-gridv').textContent=document.getElementById('ic-grid').value;renderIcon();});
+document.querySelectorAll('.sz-btn').forEach(btn=>btn.addEventListener('click',()=>{btn.classList.toggle('on');renderIcon();}));
+
+// ══ PIXEL EDITOR
+let peGrid=16,peTool='pen',peColor='#ff0000',peHistory=[],peDrawing=false;
+const PE_COLORS=['#000000','#ffffff','#ff0000','#ff6600','#f5e000','#00aa44','#0057b8','#c800ff','#ff2d78','#00f5ff','#8B4513','#888888'];
+let pePixels=[];
+
+function initEditor(){
+  peGrid=+document.getElementById('pe-size').value;
+  const bg=document.getElementById('pe-bg').value;
+  pePixels=Array(peGrid*peGrid).fill(bg==='transparent'?'transparent':bg);
+  renderEditor();
+}
+
+function renderEditor(){
+  const ed=document.getElementById('pixel-editor');
+  ed.style.gridTemplateColumns=`repeat(${peGrid},18px)`;
+  ed.innerHTML='';
+  pePixels.forEach((col,i)=>{
+    const cell=document.createElement('div');cell.className='pe-cell';cell.style.background=col==='transparent'?'transparent':col;
+    cell.style.backgroundImage=col==='transparent'?'repeating-conic-gradient(#333 0% 25%, #222 0% 50%) 0 0/8px 8px':'none';
+    cell.dataset.i=i;
+    cell.addEventListener('mousedown',e=>{peDrawing=true;paintCell(i);e.preventDefault();});
+    cell.addEventListener('mouseover',()=>{if(peDrawing)paintCell(i);});
+    ed.appendChild(cell);
+  });
+  document.addEventListener('mouseup',()=>{peDrawing=false;});
+}
+
+function paintCell(i){
+  const prev=[...pePixels];
+  if(peTool==='pen')pePixels[i]=peColor;
+  else if(peTool==='erase')pePixels[i]='transparent';
+  else if(peTool==='fill'){const target=pePixels[i];if(target!==peColor)floodFill(i,target,peColor);}
+  peHistory.push(prev);if(peHistory.length>30)peHistory.shift();
+  renderEditor();
+}
+
+function floodFill(start,target,replacement){
+  if(target===replacement)return;
+  const stack=[start];const visited=new Set();
+  while(stack.length){
+    const idx=stack.pop();if(visited.has(idx)||pePixels[idx]!==target)continue;
+    visited.add(idx);pePixels[idx]=replacement;
+    const x=idx%peGrid,y=Math.floor(idx/peGrid);
+    if(x>0)stack.push(idx-1);if(x<peGrid-1)stack.push(idx+1);
+    if(y>0)stack.push(idx-peGrid);if(y<peGrid-1)stack.push(idx+peGrid);
+  }
+}
+
+function setTool(t){peTool=t;document.querySelectorAll('.tool-btn').forEach(b=>b.classList.toggle('on',b.id==='tool-'+t));}
+function clearEditor(){peHistory.push([...pePixels]);pePixels=pePixels.map(()=>document.getElementById('pe-bg').value==='transparent'?'transparent':'#000');renderEditor();}
+function undoEditor(){if(peHistory.length){pePixels=peHistory.pop();renderEditor();}}
+
+function addCustomColor(){const c=document.getElementById('pe-custom-color').value;if(!PE_COLORS.includes(c)){PE_COLORS.push(c);renderPalette();}}
+function renderPalette(){
+  const p=document.getElementById('pe-palette');p.innerHTML='';
+  PE_COLORS.forEach(c=>{const s=document.createElement('div');s.className='cp-swatch'+(c===peColor?' active':'');s.style.background=c;s.onclick=()=>{peColor=c;renderPalette();};p.appendChild(s);});
+}
+
+function peExport(targetSz,filename){
+  const c=document.createElement('canvas');c.width=targetSz;c.height=targetSz;
+  const ctx=c.getContext('2d');ctx.clearRect(0,0,targetSz,targetSz);
+  const cellSz=targetSz/peGrid;
+  pePixels.forEach((col,i)=>{if(col&&col!=='transparent'){const x=(i%peGrid)*cellSz,y=Math.floor(i/peGrid)*cellSz;ctx.fillStyle=col;ctx.fillRect(x,y,cellSz,cellSz);}});
+  const a=document.createElement('a');a.href=c.toDataURL('image/png');a.download=filename;a.click();
+}
+
+function peExportSVG(){
+  const cellSz=1;
+  let rects='';
+  pePixels.forEach((col,i)=>{if(col&&col!=='transparent'){const x=i%peGrid,y=Math.floor(i/peGrid);rects+=`<rect x="${x}" y="${y}" width="1" height="1" fill="${col}"/>`;}});
+  const svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${peGrid} ${peGrid}" width="${peGrid*8}" height="${peGrid*8}" shape-rendering="crispEdges">${rects}</svg>`;
+  const a=document.createElement('a');a.href='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);a.download='pixel_icon.svg';a.click();
+}
+
+// init editor
+renderPalette();initEditor();
+
+// ══ API KEY
+function saveKey(){const k=document.getElementById('api-key').value.trim();if(k){localStorage.setItem('pa_key',k);document.getElementById('key-st').textContent='opgeslagen';}}
+(function(){const k=localStorage.getItem('pa_key')||'';if(k){document.getElementById('api-key').value=k;document.getElementById('key-st').textContent='opgeslagen';}})();
+
+// ══ THEMAS
+const DEF=[{l:'Mensen',p:'pixel art portret van een persoon, kleurrijke outfit, zwarte achtergrond, neon kleuren'},{l:'Dieren',p:'schattig dier in pixel art, zwarte achtergrond, heldere neon kleuren'},{l:'Voedsel',p:'pixel art van kleurrijk eten of fruit, zwarte achtergrond'},{l:'Gebouwen',p:'pixel art stadsgezicht bij nacht, zwarte achtergrond, neon lichten'},{l:'Ruimte',p:'pixel art planeten sterren raket, zwarte achtergrond, neon blauw roze paars'},{l:'Natuur',p:'pixel art boom of bloem, zwarte achtergrond, groene gele neon kleuren'},{l:'Voertuigen',p:'pixel art auto of motor zijaanzicht, zwarte achtergrond'},{l:'Fantasy',p:'pixel art draak of magisch wezen, zwarte achtergrond, neon paars en goud'},{l:'Icoon',p:'strak pixel art icoon, zwarte achtergrond, helder kleurcontrast, eenvoudig herkenbaar symbool'}];
+let cust=JSON.parse(localStorage.getItem('pxThemes')||'[]'),actIdx=null;
+function renderThemes(){
+  const w=document.getElementById('theme-wrap');w.innerHTML='';
+  [...DEF,...cust].forEach((t,i)=>{const b=document.createElement('button');b.className='tbtn'+(actIdx===i?' on':'');b.textContent=t.l;b.onclick=()=>{actIdx=i;document.getElementById('gen-prompt').value=t.p;renderThemes();};w.appendChild(b);});
+  const sl=document.getElementById('stags');sl.innerHTML='';
+  if(!cust.length){sl.innerHTML='<span style="font-size:11px;color:#2a2a2a">Nog geen eigen themas</span>';return;}
+  cust.forEach((t,i)=>{const d=document.createElement('div');d.className='stag';d.innerHTML=t.l+'<span class="x" onclick="rmTheme('+i+')">x</span>';sl.appendChild(d);});
+}
+function addTheme(){const inp=document.getElementById('new-theme'),v=inp.value.trim();if(!v)return;cust.push({l:v,p:`pixel art van ${v}, zwarte achtergrond, neon kleuren, herkenbaar`});localStorage.setItem('pxThemes',JSON.stringify(cust));inp.value='';renderThemes();}
+function rmTheme(i){cust.splice(i,1);localStorage.setItem('pxThemes',JSON.stringify(cust));renderThemes();}
+document.getElementById('new-theme').addEventListener('keydown',e=>{if(e.key==='Enter')addTheme();});
+document.getElementById('gen-grid').addEventListener('input',()=>{document.getElementById('gen-gridv').textContent=document.getElementById('gen-grid').value;});
+renderThemes();
+
+// ══ AI GENERATOR
+async function generate(){
+  const key=localStorage.getItem('pa_key')||document.getElementById('api-key').value.trim();
+  if(!key||!key.startsWith('sk-')){alert('Vul eerst een Anthropic API key in');return;}
+  const prompt=document.getElementById('gen-prompt').value.trim();
+  if(!prompt){alert('Kies een thema of schrijf een beschrijving');return;}
+  const gs=+document.getElementById('gen-grid').value,pal=document.getElementById('gen-pal').value;
+  const btn=document.getElementById('gen-btn');btn.disabled=true;btn.textContent='Bezig...';
+  document.getElementById('gen-res').style.display='block';document.getElementById('gen-btns').style.display='none';
+  const st=document.getElementById('gen-st');st.className='status load';st.textContent='Claude genereert pixel art SVG...';
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:4000,
+        system:`Je bent een pixel art SVG maker. Reageer UITSLUITEND met een SVG element — geen uitleg, geen markdown. De SVG: viewBox="0 0 320 320", zwart achtergrond rect, alleen rect-elementen van exact ${gs}x${gs} pixels, herkenbaar kleurrijk figuur.`,
+        messages:[{role:'user',content:`Maak pixel art van: ${prompt}. Gebruik ${gs}px blokken op 320x320. Zwarte achtergrond. Max 20x20 blokken.`}]
+      })
+    });
+    if(!res.ok){const e=await res.json();throw new Error(e.error?.message||'HTTP '+res.status);}
+    const data=await res.json();
+    const text=data.content?.find(b=>b.type==='text')?.text||'';
+    const m=text.match(/<svg[\s\S]*?<\/svg>/i);
+    if(!m)throw new Error('Geen SVG ontvangen');
+    st.className='status ok';st.textContent='Klaar!';
+    const blob=new Blob([m[0]],{type:'image/svg+xml'}),url=URL.createObjectURL(blob),ti=new Image();
+    ti.onload=()=>{
+      const sc=document.getElementById('gen-src');sc.width=320;sc.height=320;sc.getContext('2d').drawImage(ti,0,0,320,320);
+      URL.revokeObjectURL(url);
+      pixelize(sc,document.getElementById('gen-pix'),gs,pal);
+      document.getElementById('gen-btns').style.display='flex';
+    };
+    ti.onerror=()=>{throw new Error('SVG render mislukt');};ti.src=url;
+  }catch(err){st.className='status err';st.textContent='Fout: '+err.message;}
+  btn.disabled=false;btn.textContent='Genereer pixel art';
+}
+
+function sendToIcon(){
+  const src=document.getElementById('gen-pix');
+  if(!src||src.width<2)return;
+  icImg=new Image();icImg.onload=()=>{T('pictogram');PT('foto');document.getElementById('ic-drop').style.display='none';document.getElementById('ic-ui').style.display='block';renderIcon();};
+  icImg.src=src.toDataURL();
+}
+
+// ══ DOWNLOAD
+function dlPNG(id,fn){const c=document.getElementById(id);if(!c||c.width<2){alert('Geen afbeelding');return;}const a=document.createElement('a');a.href=c.toDataURL('image/png');a.download=fn;a.click();}
+function dlPDF(id){
+  const c=document.getElementById(id);if(!c||c.width<2){alert('Geen afbeelding');return;}
+  const du=c.toDataURL('image/png'),w=c.width,h=c.height,pt=2.8346,mW=80,mH=Math.round(80/(w/h));
+  const pw=210*pt,ph=297*pt,iw=mW*pt,ih=mH*pt,ix=(pw-iw)/2,iy=(ph-ih)/2,b64=du.split(',')[1];
+  const pdf=`%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 ${pw.toFixed(2)} ${ph.toFixed(2)}]/Contents 4 0 R/Resources<</XObject<</Im1 5 0 R>>>>>>endobj\n4 0 obj<</Length 60>>\nstream\nq ${iw.toFixed(2)} 0 0 ${ih.toFixed(2)} ${ix.toFixed(2)} ${iy.toFixed(2)} cm /Im1 Do Q\nendstream\nendobj\n5 0 obj<</Type/XObject/Subtype/Image/Width ${w}/Height ${h}/ColorSpace/DeviceRGB/BitsPerComponent 8/Filter/DCTDecode/Length ${b64.length}>>\nstream\n${atob(b64)}\nendstream\nendobj\nxref\n0 6\ntrailer<</Size 6/Root 1 0 R>>\n%%EOF`;
+  const bl=new Blob([pdf],{type:'application/pdf'}),url=URL.createObjectURL(bl),a=document.createElement('a');
+  a.href=url;a.download='pixel_print.pdf';a.click();setTimeout(()=>URL.revokeObjectURL(url),5000);
+}
+</script>
+
+<!-- PWA manifest inline -->
+<script>
+const manifest={name:'Pixel Studio',short_name:'Pixel Studio',start_url:'.',display:'standalone',background_color:'#111111',theme_color:'#111111',description:'Pixel art converter, pictogram maker en AI generator',icons:[{src:'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" fill="%23111"/><rect x="8" y="8" width="12" height="12" fill="%23fff"/><rect x="22" y="8" width="12" height="12" fill="%23aaa"/><rect x="8" y="22" width="12" height="12" fill="%23666"/><rect x="22" y="22" width="12" height="12" fill="%23fff"/><rect x="36" y="8" width="20" height="4" fill="%234af"/><rect x="36" y="14" width="16" height="4" fill="%234af"/><rect x="8" y="36" width="48" height="4" fill="%23f44"/><rect x="8" y="44" width="40" height="4" fill="%23f80"/></svg>',sizes:'64x64',type:'image/svg+xml'}]};
+const blob=new Blob([JSON.stringify(manifest)],{type:'application/manifest+json'});
+const link=document.createElement('link');link.rel='manifest';link.href=URL.createObjectURL(blob);document.head.appendChild(link);
+</script>
+</body>
+</html>
